@@ -26,7 +26,9 @@ func (c DeployTestStepRunner) Run(s *TestState) error {
 	}
 	c.Vars["job_name"] = s.JobName
 
-	job, err := template.RenderJob("fixtures/"+c.FixtureName, []string{}, "", &c.Vars, false)
+	job, err := template.RenderJob(
+		&structs.TemplateConfig{TemplateFile: "fixtures/" + c.FixtureName, VariableFiles: []string{}}, "", &c.Vars,
+	)
 	if err != nil {
 		return fmt.Errorf("error rendering template: %s", err)
 	}
