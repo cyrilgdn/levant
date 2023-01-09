@@ -9,6 +9,7 @@ import (
 
 	"github.com/hashicorp/levant/client"
 	"github.com/hashicorp/levant/helper"
+	"github.com/hashicorp/levant/levant/structs"
 	nomad "github.com/hashicorp/nomad/api"
 	"github.com/hashicorp/nomad/jobspec"
 	"github.com/hashicorp/nomad/jobspec2"
@@ -20,19 +21,20 @@ import (
 
 // RenderJob takes in a template and variables performing a render of the
 // template followed by Nomad jobspec parse.
-func RenderJob(templateFile string, variableFiles []string, addr string, flagVars *map[string]interface{}, hcl2 bool) (job *nomad.Job, err error) {
+func RenderJob(templateConfig *structs.TemplateConfig, addr string, flagVars *map[string]interface{}) (job *nomad.Job, err error) {
 	var tpl *bytes.Buffer
-	tpl, err = RenderTemplate(templateFile, variableFiles, addr, flagVars)
+	tpl, err = RenderTemplate(templateConfig.TemplateFile, templateConfig.VariableFiles, addr, flagVars)
 	if err != nil {
 		return
 	}
 
-	if hcl2 {
+	if !templateConfig.DisableHCL2 {
 		return jobspec2.ParseWithConfig(&jobspec2.ParseConfig{
-			Path:    templateFile,
-			Body:    tpl.Bytes(),
-			AllowFS: true,
-			Strict:  true,
+			Path:     templateConfig.TemplateFile,
+			Body:     tpl.Bytes(),
+			AllowFS:  true,
+			Strict:   true,
+			VarFiles: templateConfig.NomadVariableFiles,
 		})
 	}
 

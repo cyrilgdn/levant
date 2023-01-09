@@ -4,6 +4,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/hashicorp/levant/levant/structs"
 	nomad "github.com/hashicorp/nomad/api"
 )
 
@@ -25,7 +26,12 @@ func TestTemplater_RenderTemplate(t *testing.T) {
 	fVars := make(map[string]interface{})
 
 	// Test basic TF template render.
-	job, err = RenderJob("test-fixtures/single_templated.nomad", []string{"test-fixtures/test.tf"}, "", &fVars, false)
+	config := &structs.TemplateConfig{
+		TemplateFile:  "test-fixtures/single_templated.nomad",
+		VariableFiles: []string{"test-fixtures/test.tf"},
+		DisableHCL2:   true,
+	}
+	job, err = RenderJob(config, "", &fVars)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,7 +43,8 @@ func TestTemplater_RenderTemplate(t *testing.T) {
 	}
 
 	// Test basic YAML template render.
-	job, err = RenderJob("test-fixtures/single_templated.nomad", []string{"test-fixtures/test.yaml"}, "", &fVars, false)
+	config = &structs.TemplateConfig{TemplateFile: "test-fixtures/single_templated.nomad", VariableFiles: []string{"test-fixtures/test.yaml"}}
+	job, err = RenderJob(config, "", &fVars)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -49,7 +56,11 @@ func TestTemplater_RenderTemplate(t *testing.T) {
 	}
 
 	// Test multiple var-files
-	job, err = RenderJob("test-fixtures/single_templated.nomad", []string{"test-fixtures/test.yaml", "test-fixtures/test-overwrite.yaml"}, "", &fVars, false)
+	config = &structs.TemplateConfig{
+		TemplateFile:  "test-fixtures/single_templated.nomad",
+		VariableFiles: []string{"test-fixtures/test.yaml", "test-fixtures/test-overwrite.yaml"},
+	}
+	job, err = RenderJob(config, "", &fVars)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +69,11 @@ func TestTemplater_RenderTemplate(t *testing.T) {
 	}
 
 	// Test multiple var-files of different types
-	job, err = RenderJob("test-fixtures/single_templated.nomad", []string{"test-fixtures/test.tf", "test-fixtures/test-overwrite.yaml"}, "", &fVars, false)
+	config = &structs.TemplateConfig{
+		TemplateFile:  "test-fixtures/single_templated.nomad",
+		VariableFiles: []string{"test-fixtures/test.tf", "test-fixtures/test-overwrite.yaml"},
+	}
+	job, err = RenderJob(config, "", &fVars)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,7 +83,12 @@ func TestTemplater_RenderTemplate(t *testing.T) {
 
 	// Test multiple var-files with var-args
 	fVars["job_name"] = testJobNameOverwrite2
-	job, err = RenderJob("test-fixtures/single_templated.nomad", []string{"test-fixtures/test.tf", "test-fixtures/test-overwrite.yaml"}, "", &fVars, false)
+
+	config = &structs.TemplateConfig{
+		TemplateFile:  "test-fixtures/single_templated.nomad",
+		VariableFiles: []string{"test-fixtures/test.tf", "test-fixtures/test-overwrite.yaml"},
+	}
+	job, err = RenderJob(config, "", &fVars)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,7 +97,8 @@ func TestTemplater_RenderTemplate(t *testing.T) {
 	}
 
 	// Test empty var-args and empty variable file render.
-	job, err = RenderJob("test-fixtures/none_templated.nomad", []string{}, "", &fVars, false)
+	config = &structs.TemplateConfig{TemplateFile: "test-fixtures/none_templated.nomad", VariableFiles: []string{}}
+	job, err = RenderJob(config, "", &fVars)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,8 +107,9 @@ func TestTemplater_RenderTemplate(t *testing.T) {
 	}
 
 	// Test var-args only render.
+	config = &structs.TemplateConfig{TemplateFile: "test-fixtures/single_templated.nomad", VariableFiles: []string{}}
 	fVars = map[string]interface{}{"job_name": testJobName, "task_resource_cpu": "1313"}
-	job, err = RenderJob("test-fixtures/single_templated.nomad", []string{}, "", &fVars, false)
+	job, err = RenderJob(config, "", &fVars)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -99,8 +121,9 @@ func TestTemplater_RenderTemplate(t *testing.T) {
 	}
 
 	// Test var-args only render with HCL2 spec
+	config = &structs.TemplateConfig{TemplateFile: "test-fixtures/single_templated_connect.nomad"}
 	fVars = map[string]interface{}{"job_name": testJobName, "task_resource_cpu": "1313", "upstream_datacenter": "dc2"}
-	job, err = RenderJob("test-fixtures/single_templated_connect.nomad", []string{}, "", &fVars, true)
+	job, err = RenderJob(config, "", &fVars)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -116,9 +139,10 @@ func TestTemplater_RenderTemplate(t *testing.T) {
 
 	// Test var-args and variables file render.
 	delete(fVars, "job_name")
+	config = &structs.TemplateConfig{TemplateFile: "test-fixtures/multi_templated.nomad", VariableFiles: []string{"test-fixtures/test.yaml"}}
 	fVars["datacentre"] = testDCName
 	os.Setenv(testEnvName, testEnvValue)
-	job, err = RenderJob("test-fixtures/multi_templated.nomad", []string{"test-fixtures/test.yaml"}, "", &fVars, false)
+	job, err = RenderJob(config, "", &fVars)
 	if err != nil {
 		t.Fatal(err)
 	}

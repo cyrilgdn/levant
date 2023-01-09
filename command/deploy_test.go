@@ -3,6 +3,7 @@ package command
 import (
 	"testing"
 
+	"github.com/hashicorp/levant/levant/structs"
 	"github.com/hashicorp/levant/template"
 )
 
@@ -30,7 +31,7 @@ func TestDeploy_checkCanaryAutoPromote(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		job, err := template.RenderJob(c.File, []string{}, "", &fVars, false)
+		job, err := template.RenderJob(&structs.TemplateConfig{TemplateFile: c.File, VariableFiles: []string{}}, "", &fVars)
 		if err != nil {
 			t.Fatalf("case %d failed: %v", i, err)
 		}
@@ -61,7 +62,7 @@ func TestDeploy_checkForceBatch(t *testing.T) {
 	}
 
 	for i, c := range cases {
-		job, err := template.RenderJob(c.File, []string{}, "", &fVars, false)
+		job, err := template.RenderJob(&structs.TemplateConfig{TemplateFile: c.File, VariableFiles: []string{}}, "", &fVars)
 		if err != nil {
 			t.Fatalf("case %d failed: %v", i, err)
 		}

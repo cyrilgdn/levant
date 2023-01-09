@@ -84,8 +84,11 @@ type TemplateConfig struct {
 	// templateFile before deployment.
 	VariableFiles []string
 
-	// HCL2 is a boolean flag that enables using jobspec2 parser
-	HCL2 bool
+	// DisableHCL2 is a boolean flag that allows to disable HCL2 jobspec parser
+	DisableHCL2 bool
+
+	// NomadVariableFiles contains a list of Nomad variables files
+	NomadVariableFiles []string
 }
 
 // ScaleConfig contains all the scaling specific configuration options.
